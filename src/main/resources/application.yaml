@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: zestorder-product-api
+  jackson:
+    serialization:
+      WRITE_BIGDECIMAL_AS_PLAIN: true
+  data:
+    mongodb:
+      auto-index-creation: true
+      host: ${MONGO_HOST:localhost}
+      port: ${MONGO_PORT:27017}
+      database: zestorder-products
+      username: ${MONGO_ROOT_USER}
+      password: ${MONGO_ROOT_PASSWORD}
+      authentication-database: admin
+
+server:
+  netty:
+    connection-timeout: 2s
+    idle-timeout: 60s
+    max-keep-alive-requests: 1000
+
+logging:
+  pattern:
+    level: "%5p [ZestOrder, %X{traceId:-}, %X{spanId:-}]"
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0 # Capture 100% of requests
+  zipkin:
+    tracing:
+      endpoint: "http://localhost:9411/api/v2/spans"
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+zestorder:
+  product:
+    images:
+      min-count: 1
+      max-count: 10
+      max-size-bytes: 3145728 # 3MB in bytes (3 * 1024 * 1024)
+      allowed-types:
+        - image/jpeg
+        - image/png
+        - image/jpg
+
+aws:
+  s3:
+    region: ${AWS_REGION}
+    bucket-name: zestorder-product-images
+  credentials:
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
