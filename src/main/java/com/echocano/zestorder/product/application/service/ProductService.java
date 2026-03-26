@@ -7,6 +7,7 @@ import com.echocano.zestorder.product.application.port.input.CreateProductInputP
 import com.echocano.zestorder.product.application.port.input.DeleteProductInputPort;
 import com.echocano.zestorder.product.application.port.input.FindProductInputPort;
 import com.echocano.zestorder.product.application.port.input.UpdateProductInputPort;
+import com.echocano.zestorder.product.application.port.output.ProductEventPublisherOutputPort;
 import com.echocano.zestorder.product.application.port.output.ProductRepositoryOutputPort;
 import com.echocano.zestorder.product.domain.CorePage;
 import com.echocano.zestorder.product.domain.Product;
@@ -31,6 +32,7 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
     private static final String OUTCOME_TAG = "outcome";
     private final ProductRepositoryOutputPort repository;
     private final MeterRegistry meterRegistry;
+    private final ProductEventPublisherOutputPort eventPublisher;
 
     @Override
     public Mono<Product> execute(Product product) {
@@ -50,7 +52,17 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
                         .save(product.toBuilder()
                                 .status(ProductStatus.ACTIVE)
                                 .createdAt(Instant.now())
-                                .build())))
+                                .build())
+                        .flatMap(savedProduct ->
+                                eventPublisher
+                                        .publish(savedProduct)
+                                        .retry(2)
+                                        .onErrorResume(e -> {
+                                            log.error("Failed to publish event for product {}", savedProduct.getId(), e);
+                                            return Mono.empty();
+                                        })
+                                        .then(Mono.just(savedProduct))
+                        )))
                 .doOnSuccess(productCreated -> {
                     if (productCreated != null) {
                         log.info("Product {} created with ID {}", productCreated.getName(), productCreated.getId());

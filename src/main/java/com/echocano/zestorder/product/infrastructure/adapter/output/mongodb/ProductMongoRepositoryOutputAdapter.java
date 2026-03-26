@@ -1,10 +1,11 @@
-package com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.repository;
+package com.echocano.zestorder.product.infrastructure.adapter.output.mongodb;
 
 import com.echocano.zestorder.product.application.exception.RepositoryException;
 import com.echocano.zestorder.product.application.port.output.ProductRepositoryOutputPort;
 import com.echocano.zestorder.product.domain.CorePage;
 import com.echocano.zestorder.product.domain.Product;
 import com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.mapper.ProductMongoMapper;
+import com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.repository.ProductMongoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

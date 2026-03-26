@@ -13,6 +13,52 @@ spring:
       username: ${MONGO_ROOT_USER}
       password: ${MONGO_ROOT_PASSWORD}
       authentication-database: admin
+  cloud:
+    function:
+      definition: productCreatedProducer
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          producer-properties:
+            key.serializer: org.apache.kafka.common.serialization.StringSerializer
+            value.serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+            schema.registry.url: http://localhost:8081
+            acks: all
+            enable.idempotence: true
+            retry.backoff.ms: 500
+            delivery.timeout.ms: 30000
+            request.timeout.ms: 30000
+            auto.register.schemas: true
+            use.latest.version: true
+      bindings:
+        productCreatedProducer-out-0:
+          binder: kafka-avro
+          destination: zestorder.product.created
+          content-type: application/avro
+          producer:
+            partitionCount: 2
+            useNativeEncoding: true
+      default:
+        binder: kafka-avro
+      binders:
+        kafka-avro:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  default:
+                    producer:
+                      useNativeEncoding: true
+                    consumer:
+                      useNativeEncoding: true
+                  kafka:
+                    binder:
+                      brokers: localhost:9092
+  threads:
+    virtual:
+      enabled: true
 
 server:
   netty:

@@ -1,0 +1,27 @@
+{
+  "namespace": "com.echocano.zestorder.product.infrastructure.adapter.output.kafka.events",
+  "type": "record",
+  "name": "ProductCreated",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "slug",
+      "type": "string"
+    },
+    {
+      "name": "category",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "long"
+    }
+  ]
+}
