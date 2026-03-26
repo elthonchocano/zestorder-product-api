@@ -4,8 +4,8 @@ import com.echocano.zestorder.product.application.port.input.CreateProductInputP
 import com.echocano.zestorder.product.application.port.input.DeleteProductInputPort;
 import com.echocano.zestorder.product.application.port.input.FindProductInputPort;
 import com.echocano.zestorder.product.application.port.input.UpdateProductInputPort;
-import com.echocano.zestorder.product.infrastructure.adapter.input.rest.Constant;
-import com.echocano.zestorder.product.infrastructure.adapter.input.rest.ProductModelAssembler;
+import com.echocano.zestorder.product.infrastructure.adapter.input.rest.config.ApiRoutes;
+import com.echocano.zestorder.product.infrastructure.adapter.input.rest.assembler.ProductModelAssembler;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.dto.ProductRequest;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.dto.ProductResponse;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.mapper.ProductRestMapper;
@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping(Constant.BASE_PATH)
+@RequestMapping(ApiRoutes.Products.BASE)
 public class ProductController {
 
     private final CreateProductInputPort createProductInputPort;
@@ -44,20 +44,20 @@ public class ProductController {
                 .map(assembler::toModel);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(ApiRoutes.Products.BY_ID)
     public Mono<EntityModel<ProductResponse>> getOne(@PathVariable String id) {
         return findProductInputPort.findById(id)
                 .map(assembler::toModel);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(ApiRoutes.Products.BY_ID)
     public Mono<EntityModel<ProductResponse>> update(@PathVariable String id, @Valid @RequestBody ProductRequest request) {
         return updateProductInputPort
                 .update(id, mapper.toDomain(request))
                 .map(assembler::toModel);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(ApiRoutes.Products.BY_ID)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> delete(@PathVariable String id) {
         return deleteProductInputPort.deleteProduct(id);

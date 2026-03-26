@@ -1,6 +1,7 @@
 package com.echocano.zestorder.product.infrastructure.adapter.input.rest.controllers;
 
 import com.echocano.zestorder.product.application.port.input.ImageUploadInputPort;
+import com.echocano.zestorder.product.infrastructure.adapter.input.rest.config.ApiRoutes;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.dto.ImageUploadRequest;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.dto.ImageUploadResponse;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.mapper.ImageRestMapper;
@@ -15,14 +16,14 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/images")
+@RequestMapping(ApiRoutes.Images.BASE)
 @RequiredArgsConstructor
 public class ImageUploadController {
 
     private final ImageUploadInputPort imageUploadUseCase;
     private final ImageRestMapper mapper;
 
-    @PostMapping("/upload-urls")
+    @PostMapping(ApiRoutes.Images.UPLOAD_URL)
     public Mono<List<ImageUploadResponse>> getUrls(
             @Valid @RequestBody List<ImageUploadRequest> dtos) {
         return imageUploadUseCase.executeBatch(mapper.toDomains(dtos))
