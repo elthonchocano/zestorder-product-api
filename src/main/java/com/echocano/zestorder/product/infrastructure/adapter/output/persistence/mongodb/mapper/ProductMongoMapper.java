@@ -1,15 +1,15 @@
-package com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.mapper;
+package com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.mapper;
 
 import com.echocano.zestorder.product.domain.Category;
 import com.echocano.zestorder.product.domain.CustomizationGroup;
 import com.echocano.zestorder.product.domain.CustomizationOption;
 import com.echocano.zestorder.product.domain.Product;
 import com.echocano.zestorder.product.domain.ProductAttribute;
-import com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.entities.CategoryDocument;
-import com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.entities.CustomizationGroupDocument;
-import com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.entities.CustomizationOptionDocument;
-import com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.entities.ProductAttributeDocument;
-import com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.entities.ProductDocument;
+import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.entities.CategoryDocument;
+import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.entities.CustomizationGroupDocument;
+import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.entities.CustomizationOptionDocument;
+import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.entities.ProductAttributeDocument;
+import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.entities.ProductDocument;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

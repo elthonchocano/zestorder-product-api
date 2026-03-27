@@ -1,6 +1,7 @@
 package com.echocano.zestorder.product.infrastructure.adapter.input.rest.controllers;
 
 import com.echocano.zestorder.product.application.port.input.ImageUploadInputPort;
+import com.echocano.zestorder.product.infrastructure.adapter.input.rest.ImageApi;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.config.ApiRoutes;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.dto.ImageUploadRequest;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.dto.ImageUploadResponse;
@@ -18,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping(ApiRoutes.Images.BASE)
 @RequiredArgsConstructor
-public class ImageUploadController {
+public class ImageUploadController implements ImageApi {
 
     private final ImageUploadInputPort imageUploadUseCase;
     private final ImageRestMapper mapper;

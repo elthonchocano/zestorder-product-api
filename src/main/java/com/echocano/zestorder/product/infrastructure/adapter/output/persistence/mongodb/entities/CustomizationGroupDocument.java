@@ -1,4 +1,4 @@
-package com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.entities;
+package com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

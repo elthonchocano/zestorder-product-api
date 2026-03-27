@@ -1,4 +1,4 @@
-package com.echocano.zestorder.product.infrastructure.adapter.output.s3;
+package com.echocano.zestorder.product.infrastructure.adapter.output.storage.s3;
 
 import com.echocano.zestorder.product.application.port.output.ImageStorageOutputPort;
 import lombok.RequiredArgsConstructor;

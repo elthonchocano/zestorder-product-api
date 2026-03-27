@@ -1,10 +1,10 @@
-package com.echocano.zestorder.product.infrastructure.adapter.output.kafka;
+package com.echocano.zestorder.product.infrastructure.adapter.output.messaging.kafka;
 
 import com.echocano.zestorder.product.application.port.output.ProductEventPublisherOutputPort;
 import com.echocano.zestorder.product.domain.Product;
-import com.echocano.zestorder.product.infrastructure.adapter.output.kafka.config.StreamBridgeWrapper;
+import com.echocano.zestorder.product.infrastructure.adapter.output.messaging.kafka.config.StreamBridgeWrapper;
 import com.echocano.zestorder.product.infrastructure.adapter.output.kafka.events.ProductCreated;
-import com.echocano.zestorder.product.infrastructure.adapter.output.kafka.mapper.ProductKafkaMapper;
+import com.echocano.zestorder.product.infrastructure.adapter.output.messaging.kafka.mapper.ProductKafkaMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.KafkaHeaders;

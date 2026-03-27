@@ -1,4 +1,4 @@
-package com.echocano.zestorder.product.infrastructure.adapter.output.kafka.config;
+package com.echocano.zestorder.product.infrastructure.adapter.output.messaging.kafka.config;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

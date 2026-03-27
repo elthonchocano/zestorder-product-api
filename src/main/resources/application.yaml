@@ -60,6 +60,19 @@ spring:
     virtual:
       enabled: true
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    # This prevents WebFlux from getting confused by the base URL
+    disable-swagger-default-url: true
+    # Ensures resources are loaded from the correct webjars location
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - name: zestorder-product-service
+        url: /v3/api-docs
+
 server:
   netty:
     connection-timeout: 2s

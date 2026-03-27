@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.micrometer.tracing.Tracer;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -19,11 +19,13 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestControllerAdvice
 public class RestExceptionHandler {
@@ -31,7 +33,7 @@ public class RestExceptionHandler {
     private final Tracer tracer;
 
     @ExceptionHandler(RepositoryException.class)
-    public ResponseEntity<ErrorDetails> handleRepositoryException(
+    public Mono<ResponseEntity<ErrorDetails>> handleRepositoryException(
             RepositoryException ex, ServerWebExchange exchange) {
         ErrorDetails errorDetails = new ErrorDetails(
                 ex.getMessage(),
@@ -39,7 +41,7 @@ public class RestExceptionHandler {
                 getTraceId(),
                 null,
                 LocalDateTime.now());
-        return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+        return Mono.just(new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
     @ExceptionHandler(ProductNotFoundException.class)
@@ -68,10 +70,10 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(ProductAlreadyExistsException.class)
     public ResponseEntity<ErrorDetails> handleProductAlreadyExistsException(
-            ProductAlreadyExistsException ex, HttpServletRequest request) {
+            ProductAlreadyExistsException ex, ServerWebExchange exchange) {
         ErrorDetails errorDetails = new ErrorDetails(
                 ex.getMessage(),
-                request.getRequestURI(),
+                exchange.getRequest().getPath().value(),
                 getTraceId(),
                 null,
                 LocalDateTime.now());
@@ -80,10 +82,10 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(ProductWasDeletedException.class)
     public ResponseEntity<ErrorDetails> handleProductWasDeletedException(
-            ProductWasDeletedException ex, HttpServletRequest request) {
+            ProductWasDeletedException ex, ServerWebExchange exchange) {
         ErrorDetails errorDetails = new ErrorDetails(
                 ex.getMessage(),
-                request.getRequestURI(),
+                exchange.getRequest().getPath().value(),
                 getTraceId(),
                 null,
                 LocalDateTime.now());
@@ -93,6 +95,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorDetails> handleNoResourceFoundException(NoResourceFoundException ex
             , ServerWebExchange exchange) {
+        log.error("Unhandled NoResourceFoundException at {}: ", exchange.getRequest().getPath(), ex);
         ErrorDetails errorDetails = new ErrorDetails(
                 ex.getReason(),
                 exchange.getRequest().getPath().value(),
@@ -103,14 +106,15 @@ public class RestExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorDetails> handleException(Exception ex, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<ErrorDetails>> handleException(Exception ex, ServerWebExchange exchange) {
+        log.error("Unhandled Exception at {}: ", exchange.getRequest().getPath(), ex);
         ErrorDetails errorDetails = new ErrorDetails(
-                ex.getMessage(),
+                "Something wrong happened.",
                 exchange.getRequest().getPath().value(),
                 getTraceId(),
                 null,
                 LocalDateTime.now());
-        return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+        return Mono.just(new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
     @ExceptionHandler(ServerWebInputException.class)
@@ -184,6 +188,7 @@ public class RestExceptionHandler {
                 String message,
                 @Schema(example = "-5.00")
                 Object rejectedValue
-        ) {}
+        ) {
+        }
     }
 }

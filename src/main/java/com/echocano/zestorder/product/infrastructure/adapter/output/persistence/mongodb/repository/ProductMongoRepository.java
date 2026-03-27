@@ -1,6 +1,6 @@
-package com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.repository;
+package com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.repository;
 
-import com.echocano.zestorder.product.infrastructure.adapter.output.mongodb.entities.ProductDocument;
+import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.entities.ProductDocument;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;

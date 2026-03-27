@@ -1,4 +1,4 @@
-package com.echocano.zestorder.product.infrastructure.adapter.output.kafka.mapper;
+package com.echocano.zestorder.product.infrastructure.adapter.output.messaging.kafka.mapper;
 
 import com.echocano.zestorder.product.domain.Product;
 import com.echocano.zestorder.product.infrastructure.adapter.output.kafka.events.ProductCreated;

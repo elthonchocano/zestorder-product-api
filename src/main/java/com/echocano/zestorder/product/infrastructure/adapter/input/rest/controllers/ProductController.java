@@ -4,6 +4,7 @@ import com.echocano.zestorder.product.application.port.input.CreateProductInputP
 import com.echocano.zestorder.product.application.port.input.DeleteProductInputPort;
 import com.echocano.zestorder.product.application.port.input.FindProductInputPort;
 import com.echocano.zestorder.product.application.port.input.UpdateProductInputPort;
+import com.echocano.zestorder.product.infrastructure.adapter.input.rest.ProductApi;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.config.ApiRoutes;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.assembler.ProductModelAssembler;
 import com.echocano.zestorder.product.infrastructure.adapter.input.rest.dto.ProductRequest;
@@ -27,7 +28,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(ApiRoutes.Products.BASE)
-public class ProductController {
+public class ProductController implements ProductApi {
 
     private final CreateProductInputPort createProductInputPort;
     private final FindProductInputPort findProductInputPort;
