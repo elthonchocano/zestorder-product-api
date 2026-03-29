@@ -77,6 +77,18 @@ public class ProductController implements ProductApi {
     ) {
         return findProductInputPort
                 .findActivePaged(search, page, size, sort, direction)
-                .map(corePage -> mapper.toResponsePage(corePage, assembler));
+                .map(corePage -> mapper.toResponsePage(corePage, assembler, search, null));
+    }
+
+    @Override
+    @GetMapping(ApiRoutes.Products.BY_CATEGORY_NAME)
+    public Mono<PagedModel<EntityModel<ProductResponse>>> getAllByCategoryPaged(
+            @PathVariable() String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "DESC") String direction) {
+        return findProductInputPort.findByCategoryPaged(name, page, size, sort, direction)
+                .map(corePage -> mapper.toResponsePage(corePage, assembler, null, name));
     }
 }

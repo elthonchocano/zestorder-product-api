@@ -12,7 +12,8 @@ public class ApiRoutes {
     public static final class Products {
         public static final String BASE = V1_PREFIX + "/products";
         public static final String BY_ID = "/{id}";
-        public static final String SEARCH = "/search";
+        public static final String CATEGORY = "/category";
+        public static final String BY_CATEGORY_NAME = CATEGORY + "/{name}";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)

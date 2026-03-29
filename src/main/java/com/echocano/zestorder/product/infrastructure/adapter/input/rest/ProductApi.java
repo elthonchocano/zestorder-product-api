@@ -106,4 +106,12 @@ public interface ProductApi {
             @Parameter(description = "Number of records per page", example = "10") int size,
             @Parameter(description = "Field to sort by", example = "createdAt") String sort,
             @Parameter(description = "Sort direction (ASC or DESC)", example = "DESC") String direction);
+
+    @Operation(summary = "Get all products by category paged", description = "Fetch a paginated, filtered, and sorted list of products by category.")
+    Mono<PagedModel<EntityModel<ProductResponse>>> getAllByCategoryPaged(
+            @Parameter(description = "Category to filter", example = "pizzas") String category,
+            @Parameter(description = "Page number (0-based index)", example = "0") int page,
+            @Parameter(description = "Number of records per page", example = "10") int size,
+            @Parameter(description = "Field to sort by", example = "createdAt") String sort,
+            @Parameter(description = "Sort direction (ASC or DESC)", example = "DESC") String direction);
 }

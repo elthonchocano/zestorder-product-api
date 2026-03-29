@@ -32,7 +32,9 @@ public interface ProductRestMapper {
 
     default PagedModel<EntityModel<ProductResponse>> toResponsePage(
             CorePage<Product> corePage,
-            ProductModelAssembler assembler) {
+            ProductModelAssembler assembler,
+            String search,      // Pass these from the controller
+            String category) {
         List<EntityModel<ProductResponse>> entityModels = corePage.getContent().stream()
                 .map(assembler::toModel)
                 .toList();
@@ -42,16 +44,24 @@ public interface ProductRestMapper {
                 corePage.getTotalElements(),
                 corePage.getTotalPages()
         );
+        StringBuilder uriBuilder = new StringBuilder(ApiRoutes.Products.BASE);
+        if (category != null && !category.isBlank()) {
+            uriBuilder.append(ApiRoutes.Products.CATEGORY).append("/").append(category);
+        }
+        uriBuilder.append("?page=%d&size=%d");
+        if (search != null && !search.isBlank()) {
+            uriBuilder.append("&search=").append(search);
+        }
+        String finalUri = uriBuilder.toString();
         PagedModel<EntityModel<ProductResponse>> pagedModel = PagedModel.of(entityModels, metadata);
-        String base = ApiRoutes.Products.BASE;
         int page = corePage.getPageNumber();
         int size = corePage.getPageSize();
-        pagedModel.add(Link.of(String.format("%s?page=%d&size=%d", base, page, size)).withSelfRel());
+        pagedModel.add(Link.of(String.format(finalUri, page, size)).withSelfRel());
         if (!corePage.isLast()) {
-            pagedModel.add(Link.of(String.format("%s?page=%d&size=%d", base, page + 1, size)).withRel("next"));
+            pagedModel.add(Link.of(String.format(finalUri, page + 1, size)).withRel("next"));
         }
         if (page > 0) {
-            pagedModel.add(Link.of(String.format("%s?page=%d&size=%d", base, page - 1, size)).withRel("prev"));
+            pagedModel.add(Link.of(String.format(finalUri, page - 1, size)).withRel("prev"));
         }
         return pagedModel;
     }

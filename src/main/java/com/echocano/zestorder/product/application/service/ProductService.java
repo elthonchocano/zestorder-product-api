@@ -30,6 +30,7 @@ import java.time.Instant;
 public class ProductService implements CreateProductInputPort, FindProductInputPort, DeleteProductInputPort, UpdateProductInputPort {
 
     private static final String OUTCOME_TAG = "outcome";
+    private static final String FIND_LATENCY_TAG = "zestorder.product.find.latency";
     private final ProductRepositoryOutputPort repository;
     private final MeterRegistry meterRegistry;
     private final ProductEventPublisherOutputPort eventPublisher;
@@ -116,15 +117,24 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
         Timer.Sample sample = Timer.start(meterRegistry);
         return repository.findById(id)
                 .doFinally(signalType ->
-                        sample.stop(Timer.builder("zestorder.product.find.latency")
+                        sample.stop(Timer.builder(FIND_LATENCY_TAG)
                                 .serviceLevelObjectives(Duration.ofMillis(200))
                                 .register(meterRegistry))
                 );
     }
 
     @Override
-    public Flux<Product> findByCategory(String categoryId) {
-        return null;
+    public Mono<CorePage<Product>> findByCategoryPaged(String categoryName, int page, int size, String sort, String direction) {
+        Timer.Sample sample = Timer.start(meterRegistry);
+        return repository
+                .findByCategory(categoryName, ProductStatus.ACTIVE.name(),  page, size, sort, direction)
+                .doOnSuccess(products -> log.info("Total products {} found with category {}", products.getContent().size(), categoryName))
+                .doFinally(signalType ->
+                        sample.stop(Timer.builder(FIND_LATENCY_TAG)
+                                .tag("search_active", String.valueOf(!categoryName.isEmpty()))
+                                .serviceLevelObjectives(Duration.ofMillis(200)) // SLA 200ms
+                                .register(meterRegistry))
+                );
     }
 
     @Override
@@ -134,7 +144,7 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
         return repository
                 .findAllPaged(ProductStatus.ACTIVE.name(), query, page, size, sort, direction)
                 .doFinally(signalType ->
-                        sample.stop(Timer.builder("zestorder.product.find.latency")
+                        sample.stop(Timer.builder(FIND_LATENCY_TAG)
                                 .tag("search_active", String.valueOf(!query.isEmpty()))
                                 .serviceLevelObjectives(Duration.ofMillis(200)) // SLA 200ms
                                 .register(meterRegistry))

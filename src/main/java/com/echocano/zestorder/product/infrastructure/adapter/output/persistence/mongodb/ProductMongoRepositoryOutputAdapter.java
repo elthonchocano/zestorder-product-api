@@ -63,6 +63,19 @@ public class ProductMongoRepositoryOutputAdapter implements ProductRepositoryOut
         Criteria criteria = new Criteria();
         if (status != null && !status.isBlank()) criteria.and("status").is(status);
         if (search != null && !search.isBlank()) criteria.and("name").regex(search, "i");
+        return findByCriteria(criteria, page, size, sort, direction);
+    }
+
+    @Override
+    public Mono<CorePage<Product>> findByCategory(String categoryId, String status, int page, int size, String sort, String direction) {
+        Criteria criteria = Criteria.where("category.name").is(categoryId);
+        if (status != null && !status.isBlank()) {
+            criteria.and("status").is(status);
+        }
+        return findByCriteria(criteria, page, size, sort, direction);
+    }
+
+    private Mono<CorePage<Product>> findByCriteria(Criteria criteria, int page, int size,  String sort, String direction) {
         Query query = new Query(criteria)
                 .with(PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sort)));
         return Mono.zip(

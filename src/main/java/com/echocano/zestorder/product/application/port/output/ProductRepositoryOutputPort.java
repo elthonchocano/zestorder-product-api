@@ -12,5 +12,6 @@ public interface ProductRepositoryOutputPort {
     Mono<Product> findById(String id);
     Flux<Product> findAll();
     Mono<CorePage<Product>> findAllPaged(String status, String search, int page, int size, String sort, String direction);
+    Mono<CorePage<Product>> findByCategory(String categoryId, String status, int page, int size, String sort, String direction);
     Mono<Product> findByNameAndCategory(String name, String category);
 }

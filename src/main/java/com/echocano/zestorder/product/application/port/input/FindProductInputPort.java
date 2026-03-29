@@ -9,6 +9,6 @@ public interface FindProductInputPort {
 
     Flux<Product> findAllActive();
     Mono<Product> findById(String id);
-    Flux<Product> findByCategory(String categoryId);
+    Mono<CorePage<Product>> findByCategoryPaged(String categoryName, int page, int size, String sort, String direction);
     Mono<CorePage<Product>> findActivePaged(String search, int page, int size, String sort, String direction);
 }
