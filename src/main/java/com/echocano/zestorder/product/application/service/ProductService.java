@@ -131,7 +131,8 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
     public Mono<CorePage<Product>> findActivePaged(String search, int page, int size, String sort, String direction) {
         Timer.Sample sample = Timer.start(meterRegistry);
         String query = (search == null) ? "" : search;
-        return repository.findAllPaged(ProductStatus.ACTIVE.name(), query, page, size, sort, direction)
+        return repository
+                .findAllPaged(ProductStatus.ACTIVE.name(), query, page, size, sort, direction)
                 .doFinally(signalType ->
                         sample.stop(Timer.builder("zestorder.product.find.latency")
                                 .tag("search_active", String.valueOf(!query.isEmpty()))

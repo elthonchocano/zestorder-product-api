@@ -10,7 +10,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import reactor.core.publisher.Mono;
 
 @Tag(name = "Product Service", description = "Endpoints for handling product's operation.")
@@ -49,7 +51,8 @@ public interface ProductApi {
                     , content = @Content(schema = @Schema(implementation = RestExceptionHandler.ErrorDetails.class)))
     })
     Mono<EntityModel<ProductResponse>> getOne(
-            @Parameter(description = "Product ID") String id);
+            @Parameter(description = "The unique ID of the product to retrieve", required = true, example = "60d5ecb8b392d40015f3a2a1")
+            String id);
 
     @Operation(summary = "Update a product", description = "Update a product from the system.")
     @ApiResponses(value = {
@@ -66,7 +69,16 @@ public interface ProductApi {
                     , description = "Something wrong happened."
                     , content = @Content(schema = @Schema(implementation = RestExceptionHandler.ErrorDetails.class)))
     })
-    Mono<EntityModel<ProductResponse>> update(String id, ProductRequest request);
+    Mono<EntityModel<ProductResponse>> update(
+            @Parameter(description = "The unique ID of the product to update", required = true, example = "60d5ecb8b392d40015f3a2a1")
+            String id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Updated product details",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ProductRequest.class))
+            )
+            @Valid
+            ProductRequest request);
 
     @Operation(summary = "Delete a product", description = "Delete a product from the system.")
     @ApiResponses(value = {
@@ -82,5 +94,16 @@ public interface ProductApi {
                     , description = "Something wrong happened."
                     , content = @Content(schema = @Schema(implementation = RestExceptionHandler.ErrorDetails.class)))
     })
-    Mono<Void> delete(String id);
+    Mono<Void> delete(
+            @Parameter(description = "The unique ID of the product to delete", required = true, example = "60d5ecb8b392d40015f3a2a1")
+            String id
+    );
+
+    @Operation(summary = "Get all products paged", description = "Fetch a paginated, filtered, and sorted list of products.")
+    Mono<PagedModel<EntityModel<ProductResponse>>> getAllPaged(
+            @Parameter(description = "Search term to filter products by name", example = "pizza") String search,
+            @Parameter(description = "Page number (0-based index)", example = "0") int page,
+            @Parameter(description = "Number of records per page", example = "10") int size,
+            @Parameter(description = "Field to sort by", example = "createdAt") String sort,
+            @Parameter(description = "Sort direction (ASC or DESC)", example = "DESC") String direction);
 }

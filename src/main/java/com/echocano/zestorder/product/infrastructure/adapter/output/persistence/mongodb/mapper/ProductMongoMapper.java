@@ -14,11 +14,15 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring"
         , builder = @org.mapstruct.Builder(disableBuilder = false))
 public interface ProductMongoMapper {
 
     Product toDomain(ProductDocument document);
+
+    List<Product> toDomains(List<ProductDocument> document);
 
     ProductDocument toDocument(Product domain);
 

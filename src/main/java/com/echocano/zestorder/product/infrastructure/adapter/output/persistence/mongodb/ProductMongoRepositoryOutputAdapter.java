@@ -4,12 +4,15 @@ import com.echocano.zestorder.product.application.exception.RepositoryException;
 import com.echocano.zestorder.product.application.port.output.ProductRepositoryOutputPort;
 import com.echocano.zestorder.product.domain.CorePage;
 import com.echocano.zestorder.product.domain.Product;
+import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.entities.ProductDocument;
 import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.mapper.ProductMongoMapper;
 import com.echocano.zestorder.product.infrastructure.adapter.output.persistence.mongodb.repository.ProductMongoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -22,6 +25,7 @@ public class ProductMongoRepositoryOutputAdapter implements ProductRepositoryOut
 
     private final ProductMongoRepository repository;
     private final ProductMongoMapper mapper;
+    private final ReactiveMongoTemplate mongoTemplate;
 
     @Override
     public Mono<Product> save(final Product product) {
@@ -54,24 +58,30 @@ public class ProductMongoRepositoryOutputAdapter implements ProductRepositoryOut
     }
 
     @Override
-    public Mono<CorePage<Product>> findAllPaged(String status, String search, int page, int size, String sort, String direction) {
-        Sort.Direction dir = Sort.Direction.fromString(direction);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, sort));
-        Mono<List<Product>> data = repository
-                .findAllByStatusAndNameContainingIgnoreCase(status, search, pageable)
-                .map(mapper::toDomain)
-                .collectList();
-        Mono<Long> count = repository
-                .countByStatusAndNameContainingIgnoreCase(status, search);
-        return Mono.zip(data, count)
-                .map(tuple -> CorePage.<Product>builder()
-                        .content(tuple.getT1())
-                        .pageNumber(pageable.getPageNumber())
-                        .pageSize(pageable.getPageSize())
-                        .totalElements(tuple.getT2())
-                        .totalPages((int) Math.ceil((double) tuple.getT2() / size))
-                        .isLast(pageable.getOffset() + tuple.getT1().size() >= tuple.getT2())
-                        .build());
+    public Mono<CorePage<Product>> findAllPaged(String status, String search, int page, int size
+            , String sort, String direction) {
+        Criteria criteria = new Criteria();
+        if (status != null && !status.isBlank()) criteria.and("status").is(status);
+        if (search != null && !search.isBlank()) criteria.and("name").regex(search, "i");
+        Query query = new Query(criteria)
+                .with(PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sort)));
+        return Mono.zip(
+                mongoTemplate.find(query, ProductDocument.class).collectList(),
+                mongoTemplate.count(Query.query(criteria), ProductDocument.class)
+        ).map(tuple -> {
+            List<Product> products = mapper.toDomains(tuple.getT1());
+            long totalElements = tuple.getT2();
+            int totalPages = (int) Math.ceil((double) totalElements / size);
+            boolean isLast = page >= totalPages - 1;
+            return new CorePage<>(
+                    products,
+                    page,
+                    size,
+                    totalElements,
+                    totalPages,
+                    isLast
+            );
+        });
     }
 
     @Override
