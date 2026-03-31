@@ -80,23 +80,40 @@ server:
     max-keep-alive-requests: 1000
 
 logging:
+  otlp:
+    enabled: true
+  level:
+    root: INFO
+    io.opentelemetry.extension.trace.propagation: WARN
+    # Ensures your business logic logs stay visible
+    com.echocano.zestorder.product: INFO
+
   pattern:
-    level: "%5p [ZestOrder, %X{traceId:-}, %X{spanId:-}]"
+    level: "%5p [${spring.application.name:}, %X{traceId:-}, %X{spanId:-}]"
 
 management:
-  tracing:
-    sampling:
-      probability: 1.0 # Capture 100% of requests
-  zipkin:
-    tracing:
-      endpoint: "http://localhost:9411/api/v2/spans"
   endpoints:
     web:
       exposure:
-        include: health, info, prometheus, metrics
+        include: health, info, prometheus, metrics, tracing
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    propagation:
+      type: W3C,B3
+  otlp:
+    tracing:
+      endpoint: "http://127.0.0.1:4318/v1/traces"
+      transport: http
+    logs:
+      endpoint: "http://localhost:4317"
   metrics:
     tags:
       application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true # Essential for Prometheus SLIs/SLOs
 
 zestorder:
   product:
