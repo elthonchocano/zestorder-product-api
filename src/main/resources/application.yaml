@@ -108,12 +108,24 @@ management:
       transport: http
     logs:
       endpoint: "http://localhost:4317"
+    metrics:
+      export:
+        url: "http://127.0.0.1:4318/v1/metrics"
+        step: 10s
   metrics:
     tags:
       application: ${spring.application.name}
     distribution:
+      percentiles:
+        zestorder.product.delete: 0.5, 0.95, 0.99
+        zestorder.product.create: 0.5, 0.95, 0.99
+        zestorder.product.find: 0.5, 0.95, 0.99
+        zestorder.product.update: 0.5, 0.95, 0.99
       percentiles-histogram:
-        http.server.requests: true # Essential for Prometheus SLIs/SLOs
+        http.server.requests: true
+  observations:
+    key-values:
+      application: ${spring.application.name}
 
 zestorder:
   product:

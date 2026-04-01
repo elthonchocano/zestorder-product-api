@@ -15,9 +15,11 @@ import com.echocano.zestorder.product.domain.ProductStatus;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.observability.micrometer.Micrometer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,14 +32,19 @@ import java.time.Instant;
 public class ProductService implements CreateProductInputPort, FindProductInputPort, DeleteProductInputPort, UpdateProductInputPort {
 
     private static final String OUTCOME_TAG = "outcome";
-    private static final String FIND_LATENCY_TAG = "zestorder.product.find.latency";
+    private static final String CATEGORY_TAG = "category";
+    private static final String TYPE_TAG = "type";
+    private static final String FIND_LATENCY_TAG = "zestorder.product.find";
+    private static final String CREATE_LATENCY_TAG = "zestorder.product.create";
+    private static final String UPDATE_LATENCY_TAG = "zestorder.product.update";
+    private static final String DELETE_LATENCY_TAG = "zestorder.product.delete";
     private final ProductRepositoryOutputPort repository;
     private final MeterRegistry meterRegistry;
     private final ProductEventPublisherOutputPort eventPublisher;
+    private final ObservationRegistry observationRegistry;
 
     @Override
     public Mono<Product> execute(Product product) {
-        Timer.Sample sample = Timer.start(meterRegistry);
         return repository.findByNameAndCategory(product.getName(), product.getCategory().name())
                 .flatMap(existing -> {
                     if (ProductStatus.DELETED.equals(existing.getStatus())) {
@@ -69,17 +76,13 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
                         log.info("Product {} created with ID {}", productCreated.getName(), productCreated.getId());
                     }
                 })
-                .doFinally(signalType ->
-                        sample.stop(Timer.builder("zestorder.product.create.latency")
-                                .tag(OUTCOME_TAG, signalType.toString())
-                                .tag("category", product.getCategory().name())
-                                .register(meterRegistry))
-                );
+                .name(CREATE_LATENCY_TAG)
+                .tag(CATEGORY_TAG, product.getCategory().name())
+                .tap(Micrometer.observation(observationRegistry));
     }
 
     @Override
     public Mono<Void> deleteProduct(String id) {
-        Timer.Sample sample = Timer.start(meterRegistry);
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ProductNotFoundException(
                         String.format("Product with ID [%s] not found", id))))
@@ -88,22 +91,11 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
                                 .status(ProductStatus.DELETED)
                                 .updatedAt(Instant.now())
                                 .build()))
-                .doOnSuccess(product -> {
-                    Counter.builder("zestorder.product.deleted")
-                            .tag("category", product.getCategory().name())
-                            .tag("status", "SUCCESS")
-                            .description("Count of deleted products by category")
-                            .register(meterRegistry)
-                            .increment();
-                    log.info("AUDIT: Product [{}] marked as DELETED.", product.getSku());
-                })
+                .doOnSuccess(product -> log.info("AUDIT: Product [{}] marked as DELETED.", product.getSku()))
                 .doOnError(e -> log.error("Failed to delete product ID {}: {}", id, e.getMessage()))
-                .doFinally(signalType ->
-                        sample.stop(Timer.builder("zestorder.product.delete.latency")
-                                .publishPercentiles(0.5, 0.95, 0.99)
-                                .description("Time taken to process product deletion")
-                                .tag(OUTCOME_TAG, signalType.toString())
-                                .register(meterRegistry)))
+                .name(DELETE_LATENCY_TAG)
+                .tag(CATEGORY_TAG, "all")
+                .tap(Micrometer.observation(observationRegistry))
                 .then();
     }
 
@@ -114,46 +106,35 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
 
     @Override
     public Mono<Product> findById(String id) {
-        Timer.Sample sample = Timer.start(meterRegistry);
         return repository.findById(id)
-                .doFinally(signalType ->
-                        sample.stop(Timer.builder(FIND_LATENCY_TAG)
-                                .serviceLevelObjectives(Duration.ofMillis(200))
-                                .register(meterRegistry))
-                );
+                .name(FIND_LATENCY_TAG)
+                .tag(TYPE_TAG, "id")
+                .tap(Micrometer.observation(observationRegistry));
     }
 
     @Override
     public Mono<CorePage<Product>> findByCategoryPaged(String categoryName, int page, int size, String sort, String direction) {
-        Timer.Sample sample = Timer.start(meterRegistry);
         return repository
-                .findByCategory(categoryName, ProductStatus.ACTIVE.name(),  page, size, sort, direction)
+                .findByCategory(categoryName, ProductStatus.ACTIVE.name(), page, size, sort, direction)
                 .doOnSuccess(products -> log.info("Total products {} found with category {}", products.getContent().size(), categoryName))
-                .doFinally(signalType ->
-                        sample.stop(Timer.builder(FIND_LATENCY_TAG)
-                                .tag("search_active", String.valueOf(!categoryName.isEmpty()))
-                                .serviceLevelObjectives(Duration.ofMillis(200)) // SLA 200ms
-                                .register(meterRegistry))
-                );
+                .name(FIND_LATENCY_TAG)
+                .tag(TYPE_TAG, CATEGORY_TAG)
+                .tag(CATEGORY_TAG, categoryName)
+                .tap(Micrometer.observation(observationRegistry));
     }
 
     @Override
     public Mono<CorePage<Product>> findActivePaged(String search, int page, int size, String sort, String direction) {
-        Timer.Sample sample = Timer.start(meterRegistry);
         String query = (search == null) ? "" : search;
         return repository
                 .findAllPaged(ProductStatus.ACTIVE.name(), query, page, size, sort, direction)
-                .doFinally(signalType ->
-                        sample.stop(Timer.builder(FIND_LATENCY_TAG)
-                                .tag("search_active", String.valueOf(!query.isEmpty()))
-                                .serviceLevelObjectives(Duration.ofMillis(200)) // SLA 200ms
-                                .register(meterRegistry))
-                );
+                .name(FIND_LATENCY_TAG)
+                .tag("search_active", query)
+                .tap(Micrometer.observation(observationRegistry));
     }
 
     @Override
     public Mono<Product> update(String id, Product product) {
-        Timer.Sample sample = Timer.start(meterRegistry);
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new ProductNotFoundException(id)))
                 .flatMap(existingProduct -> {
@@ -176,9 +157,8 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
                             .build();
                     return repository.save(updatedProduct);
                 })
-                .doFinally(signalType ->
-                        sample.stop(Timer.builder("zestorder.product.update.latency")
-                                .tag(OUTCOME_TAG, signalType.toString())
-                                .register(meterRegistry)));
+                .name(UPDATE_LATENCY_TAG)
+                .tag(CATEGORY_TAG, product.getCategory().name())
+                .tap(Micrometer.observation(observationRegistry));
     }
 }
