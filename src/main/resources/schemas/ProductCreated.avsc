@@ -1,5 +1,5 @@
 {
-  "namespace": "com.echocano.zestorder.product.infrastructure.adapter.output.kafka.events",
+  "namespace": "com.echocano.zestorder.product.infrastructure.adapter.output.messaging.kafka.dto",
   "type": "record",
   "name": "ProductCreated",
   "fields": [

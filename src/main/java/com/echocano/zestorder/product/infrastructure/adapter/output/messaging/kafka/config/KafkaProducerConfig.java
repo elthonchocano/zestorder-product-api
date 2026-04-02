@@ -1,6 +1,6 @@
 package com.echocano.zestorder.product.infrastructure.adapter.output.messaging.kafka.config;
 
-import com.echocano.zestorder.product.infrastructure.adapter.output.kafka.events.ProductCreated;
+import com.echocano.zestorder.product.infrastructure.adapter.output.messaging.kafka.dto.ProductCreated;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
