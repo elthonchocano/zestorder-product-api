@@ -24,6 +24,7 @@ public interface ProductRestMapper {
             expression = "java(new CategoryResponse(domain.getCategory().name(), domain.getCategory().slug()))")
     @Mapping(target = "slug",
             expression = "java(domain.slug())")
+    @Mapping(source = "currencyCode", target = "currency")
     ProductResponse toDto(Product domain);
 
     @Mapping(source = "currency", target = "currencyCode")

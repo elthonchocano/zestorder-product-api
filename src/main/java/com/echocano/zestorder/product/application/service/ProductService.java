@@ -12,9 +12,6 @@ import com.echocano.zestorder.product.application.port.output.ProductRepositoryO
 import com.echocano.zestorder.product.domain.CorePage;
 import com.echocano.zestorder.product.domain.Product;
 import com.echocano.zestorder.product.domain.ProductStatus;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +20,6 @@ import reactor.core.observability.micrometer.Micrometer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.time.Instant;
 
 @RequiredArgsConstructor
@@ -31,15 +27,14 @@ import java.time.Instant;
 @Service
 public class ProductService implements CreateProductInputPort, FindProductInputPort, DeleteProductInputPort, UpdateProductInputPort {
 
-    private static final String OUTCOME_TAG = "outcome";
     private static final String CATEGORY_TAG = "category";
     private static final String TYPE_TAG = "type";
+    private static final String SEARCH_ACTIVE_TAG = "search_active";
     private static final String FIND_LATENCY_TAG = "zestorder.product.find";
     private static final String CREATE_LATENCY_TAG = "zestorder.product.create";
     private static final String UPDATE_LATENCY_TAG = "zestorder.product.update";
     private static final String DELETE_LATENCY_TAG = "zestorder.product.delete";
     private final ProductRepositoryOutputPort repository;
-    private final MeterRegistry meterRegistry;
     private final ProductEventPublisherOutputPort eventPublisher;
     private final ObservationRegistry observationRegistry;
 
@@ -109,6 +104,8 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
         return repository.findById(id)
                 .name(FIND_LATENCY_TAG)
                 .tag(TYPE_TAG, "id")
+                .tag(CATEGORY_TAG, "all")
+                .tag(SEARCH_ACTIVE_TAG, "none")
                 .tap(Micrometer.observation(observationRegistry));
     }
 
@@ -120,6 +117,7 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
                 .name(FIND_LATENCY_TAG)
                 .tag(TYPE_TAG, CATEGORY_TAG)
                 .tag(CATEGORY_TAG, categoryName)
+                .tag(SEARCH_ACTIVE_TAG, "none")
                 .tap(Micrometer.observation(observationRegistry));
     }
 
@@ -129,7 +127,9 @@ public class ProductService implements CreateProductInputPort, FindProductInputP
         return repository
                 .findAllPaged(ProductStatus.ACTIVE.name(), query, page, size, sort, direction)
                 .name(FIND_LATENCY_TAG)
-                .tag("search_active", query)
+                .tag(TYPE_TAG, "search")
+                .tag(CATEGORY_TAG, "all")
+                .tag(SEARCH_ACTIVE_TAG, query)
                 .tap(Micrometer.observation(observationRegistry));
     }
 
